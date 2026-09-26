@@ -1,0 +1,22 @@
+# Web framework for building our REST API
+fastapi==0.111.0
+# ASGI server to run our FastAPI app
+uvicorn==0.30.1
+
+# LangChain core and community integrations for our AI Agent
+langchain==0.2.5
+langchain-community==0.2.5
+# We will use OpenAI for our LLM (You can swap this for Gemini/local models later)
+langchain-openai==0.1.8
+openai==1.35.3
+
+# Vector database for our RAG pipeline
+chromadb==0.5.3
+# Library to read and parse PDF documents for RAG
+pypdf==4.2.0
+
+# For building our quick frontend UI
+streamlit==1.36.0
+
+# To manage our environment variables (like API keys) securely
+python-dotenv==1.0.1
