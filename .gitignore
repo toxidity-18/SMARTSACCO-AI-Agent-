@@ -5,8 +5,8 @@ venv/
 .env
 
 # Python cache and compiled files
-__pycache__/
-*.pyc
+backend/__pycache__/
+backend/*.pyc
 
 # SQLite database file
 backend/sacco.db
