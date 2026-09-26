@@ -1,16 +1,15 @@
+# Python virtual environment
+venv/
 
-   # Python virtual environment
-   venv/
-   
-   # Environment variables (NEVER commit secrets)
-   .env
-   
-   # Python cache and compiled files
-   __pycache__/
-   *.pyc
-   
-   # SQLite database file
-   backend/sacco.db
-   
-   # ChromaDB local vector store
-   backend/chroma_db/
+# Environment variables
+.env
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+
+# SQLite database file
+backend/sacco.db
+
+# ChromaDB local vector store
+backend/chroma_db/
