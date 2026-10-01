@@ -46,7 +46,10 @@ def get_member_financial_summary(member_id: str) -> str:
     loan status, or provides their member ID (e.g., M001).
     """
     # Construct the URL for our FastAPI backend endpoint
-    url = f"http://127.0.0.1:8000/api/members/{member_id}/financial-summary"
+    # url = f"http://127.0.0.1:8000/api/members/{member_id}/financial-summary"
+       # Use the API_BASE_URL environment variable for cloud deployment, fallback to localhost for local dev
+    api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
+    url = f"{api_base_url}/api/members/{member_id}/financial-summary"
     
     try:
         # Make the HTTP GET request to the REST API
