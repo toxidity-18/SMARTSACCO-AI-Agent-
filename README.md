@@ -48,11 +48,11 @@ The project gave me practical experience working with:
 
 # Key Features
 
-### 🤖 AI Agent
+### AI Agent
 
 A LangChain-based agent powered by Google Gemini interprets user questions and determines which available tool should be used.
 
-### 📚 Retrieval-Augmented Generation
+### Retrieval-Augmented Generation
 
 SACCO policy documents are processed and stored in a ChromaDB vector store.
 
