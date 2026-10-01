@@ -58,7 +58,7 @@ SACCO policy documents are processed and stored in a ChromaDB vector store.
 
 The system retrieves relevant sections of the policy documents when the user asks questions about rules, interest rates, loan eligibility, or other policy-related information.
 
-### 🔧 Tool Calling
+### Tool Calling
 
 The AI agent can call different tools depending on the user's request.
 
