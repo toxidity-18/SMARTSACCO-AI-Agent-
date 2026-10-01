@@ -11,7 +11,6 @@ import os
 import streamlit as st
 
 # Add the root directory to the Python path to allow importing backend modules
-# This is necessary because the script runs from the frontend/ directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import the agent executor initialization function from our backend
@@ -19,6 +18,14 @@ from backend.agent import get_agent_executor
 
 # Configure the Streamlit page layout and title
 st.set_page_config(page_title="SmartSACCO AI Assistant", layout="centered")
+
+# ==========================================
+# CRITICAL FIX: INITIALIZE SESSION STATE FIRST
+# This MUST be before any buttons that try to use it.
+# ==========================================
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+# ==========================================
 
 st.title("SmartSACCO AI Assistant")
 st.markdown("Ask questions about your account balance or official SACCO policies.")
@@ -45,10 +52,6 @@ with col2:
         st.session_state.messages.append({"role": "user", "content": "What is the savings balance for member M999?"})
         st.rerun()
 # ------------------------------------------
-
-# Initialize session state for chat history if it does not already exist
-if "messages" not in st.session_state:
-    st.session_state.messages = []
 
 # Display all historical chat messages
 for message in st.session_state.messages:
