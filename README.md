@@ -67,7 +67,7 @@ Currently available tools include:
 - Policy/RAG retrieval
 - Member financial information API
 
-### 🏦 Member Financial Data
+### Member Financial Data
 
 A FastAPI backend provides access to demonstration member financial data stored in SQLite.
 
@@ -78,13 +78,13 @@ The API can return information such as:
 - Savings balance
 - Outstanding loan balance
 
-### 🔐 Local Embeddings
+### Local Embeddings
 
 The `all-MiniLM-L6-v2` embedding model runs locally during the RAG process.
 
 This means the policy documents do not need to be sent to an external embedding provider for vectorization.
 
-### ☁️ Cloud Deployment
+### Cloud Deployment
 
 The project uses a decoupled deployment approach:
 
