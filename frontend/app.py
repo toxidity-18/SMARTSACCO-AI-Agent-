@@ -23,6 +23,29 @@ st.set_page_config(page_title="SmartSACCO AI Assistant", layout="centered")
 st.title("SmartSACCO AI Assistant")
 st.markdown("Ask questions about your account balance or official SACCO policies.")
 
+# --- SUGGESTED PROMPTS FOR EASY TESTING ---
+st.markdown("**Suggested questions to test the AI:**")
+col1, col2 = st.columns(2)
+
+with col1:
+    if st.button("Check M001 Balance"):
+        st.session_state.messages.append({"role": "user", "content": "What is the savings balance for member M001?"})
+        st.rerun()
+        
+    if st.button("Check M002 Loan Eligibility"):
+        st.session_state.messages.append({"role": "user", "content": "I am member M002. Based on my current savings, am I eligible for a 100,000 KES loan?"})
+        st.rerun()
+
+with col2:
+    if st.button("Development Loan Interest Rate"):
+        st.session_state.messages.append({"role": "user", "content": "What is the interest rate for a development loan, and how is it calculated?"})
+        st.rerun()
+        
+    if st.button("Check Invalid Member M999"):
+        st.session_state.messages.append({"role": "user", "content": "What is the savings balance for member M999?"})
+        st.rerun()
+# ------------------------------------------
+
 # Initialize session state for chat history if it does not already exist
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -63,9 +86,17 @@ if prompt := st.chat_input("Ask me about your SACCO account or policies..."):
                 else:
                     output_text = str(raw_output)
                     
+                # Check if the AI returned a rate limit error string in the text
+                if "503" in output_text or "UNAVAILABLE" in output_text or "high demand" in output_text.lower():
+                    output_text = "The AI service is currently experiencing high traffic. Please wait a moment and try your question again."
+                    
             except Exception as e:
-                # Catch and display any errors gracefully
-                output_text = f"An error occurred while processing your request: {str(e)}"
+                # Catch and display any unexpected errors gracefully
+                error_msg = str(e)
+                if "503" in error_msg or "UNAVAILABLE" in error_msg:
+                    output_text = "The AI service is currently experiencing high traffic. Please wait a moment and try your question again."
+                else:
+                    output_text = "An unexpected error occurred. Please try again later."
                 
         # Display the final, cleaned AI response
         st.markdown(output_text)
