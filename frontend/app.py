@@ -89,11 +89,11 @@ if prompt := st.chat_input("Ask me about your SACCO account or policies..."):
                     output_text = "The AI service is currently experiencing high traffic. Please wait a moment and try your question again."
                     
             except Exception as e:
-                error_msg = str(e)
-                if "503" in error_msg or "UNAVAILABLE" in error_msg:
-                    output_text = "The AI service is currently experiencing high traffic. Please wait a moment and try your question again."
-                else:
-                    output_text = "An unexpected error occurred. Please try again later."
+                # ==========================================
+                # TEMPORARY DEBUG: Show the ACTUAL error on the screen
+                # ==========================================
+                output_text = f"DEBUG ERROR: {str(e)}"
+                # ==========================================
                 
         st.markdown(output_text)
     
