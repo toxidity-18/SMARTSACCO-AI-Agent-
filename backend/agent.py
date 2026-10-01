@@ -10,9 +10,9 @@ two distinct tools:
 
 import os
 import requests
+import streamlit as st  # Added to access Streamlit Cloud secrets
 from dotenv import load_dotenv
 
-# LangChain core components for agents and tools
 # LangChain core components for agents and tools
 from langchain_core.tools import tool
 from langchain_core.prompts import ChatPromptTemplate
@@ -27,7 +27,31 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
-# Load environment variables (specifically the GOOGLE_API_KEY)
+# ==========================================
+# ENVIRONMENT VARIABLE HANDLER
+# ==========================================
+
+def get_env_var(var_name, default=None):
+    """
+    Fetches environment variables. Checks Streamlit Cloud secrets first,
+    then falls back to standard OS environment variables.
+    """
+    try:
+        # Check Streamlit Cloud secrets (for frontend deployment)
+        if st.secrets.get(var_name):
+            return st.secrets[var_name]
+    except Exception:
+        pass
+    
+    # Fallback to standard environment variables (for local/Render backend)
+    return os.getenv(var_name, default)
+
+# Force LangChain to use the correct API Key from Streamlit Secrets if available
+google_api_key = get_env_var("GOOGLE_API_KEY")
+if google_api_key:
+    os.environ["GOOGLE_API_KEY"] = google_api_key
+
+# Load local .env file as a final fallback for local development
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 # Define the path to the persisted ChromaDB vector store (must match rag.py)
@@ -45,15 +69,13 @@ def get_member_financial_summary(member_id: str) -> str:
     Use this tool when the user asks about their account balance, 
     loan status, or provides their member ID (e.g., M001).
     """
-    # Construct the URL for our FastAPI backend endpoint
-    # url = f"http://127.0.0.1:8000/api/members/{member_id}/financial-summary"
-       # Use the API_BASE_URL environment variable for cloud deployment, fallback to localhost for local dev
-    api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
+    # Use the cloud-aware helper function to get the correct backend URL
+    api_base_url = get_env_var("API_BASE_URL", "http://127.0.0.1:8000")
     url = f"{api_base_url}/api/members/{member_id}/financial-summary"
     
     try:
-        # Make the HTTP GET request to the REST API
-        response = requests.get(url)
+        # Added timeout=15 to prevent the app from hanging if the backend is asleep
+        response = requests.get(url, timeout=15)
         
         # Handle the response based on the HTTP status code
         if response.status_code == 200:
@@ -64,8 +86,9 @@ def get_member_financial_summary(member_id: str) -> str:
             return f"Error: API returned status code {response.status_code}."
             
     except requests.exceptions.ConnectionError:
-        # This error occurs if the FastAPI server is not running
-        return "Error: Could not connect to the backend API. Ensure the FastAPI server is running on port 8000."
+        return "Error: Could not connect to the backend API. Ensure the FastAPI server is running."
+    except requests.exceptions.Timeout:
+        return "Error: The backend API took too long to respond. It might be waking up from sleep."
 
 @tool
 def query_sacco_policy(query: str) -> str:
@@ -111,9 +134,6 @@ def get_agent_executor():
     and returns an AgentExecutor ready to process user queries.
     """
     # 1. Initialize the LLM
-    # We use 'models/gemini-flash-latest' as it is the stable, officially 
-    # recommended alias that avoids experimental preview model bugs.
-    # temperature=0 ensures deterministic, factual responses based on the tool outputs.
     llm = ChatGoogleGenerativeAI(
         model="models/gemini-flash-latest",
         temperature=0
@@ -123,7 +143,6 @@ def get_agent_executor():
     tools = [get_member_financial_summary, query_sacco_policy]
     
     # 3. Create the prompt template
-    # This guides the agent's behavior and persona.
     prompt = ChatPromptTemplate.from_messages([
         ("system", 
          "You are a helpful, professional, and accurate AI assistant for a SACCO. "
@@ -133,19 +152,15 @@ def get_agent_executor():
          "If you cannot find the answer using the tools, politely state that you do not know. "
          "Do not make up information."),
         ("human", "{input}"),
-        # The agent_scratchpad is where LangChain stores the LLM's internal reasoning 
-        # and tool call results during the execution loop.
         ("placeholder", "{agent_scratchpad}"),
     ])
     
     # 4. Create the agent
-    # This binds the LLM, the tools, and the prompt together.
     agent = create_tool_calling_agent(llm, tools, prompt)
     
     # 5. Wrap in an AgentExecutor
-    # The executor handles the loop: LLM thinks -> calls tool -> gets result -> LLM thinks again.
-    # verbose=True prints the agent's internal reasoning to the terminal, which is great for debugging.
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+    # Set verbose=False for cleaner UI output in production
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
     
     return agent_executor
 
@@ -158,21 +173,16 @@ if __name__ == "__main__":
     executor = get_agent_executor()
     
     print("\n--- Test 1: RAG Tool (Policy Question) ---")
-    # This question should trigger the query_sacco_policy tool
     test_query_1 = "What is the maximum loan amount a member can get?"
     response_1 = executor.invoke({"input": test_query_1})
     print(f"\nFinal Answer: {response_1['output']}\n")
     
     print("--- Test 2: REST API Tool (Account Question) ---")
-    # This question should trigger the get_member_financial_summary tool
-    # Note: The FastAPI server MUST be running for this to work.
     test_query_2 = "Can you check the savings balance for member M001?"
     response_2 = executor.invoke({"input": test_query_2})
     print(f"\nFinal Answer: {response_2['output']}\n")
     
     print("--- Test 3: Combined Tools (Complex Question) ---")
-    # This question requires BOTH tools. The agent must check the balance, 
-    # then check the policy to see if they qualify for a loan.
     test_query_3 = "I am member M002. Based on my current savings, am I eligible for a 100,000 KES loan?"
     response_3 = executor.invoke({"input": test_query_3})
     print(f"\nFinal Answer: {response_3['output']}\n")
