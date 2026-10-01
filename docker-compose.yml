@@ -1,0 +1,34 @@
+# docker-compose.yml
+# ------------------
+# Orchestrates the multi-container application, defining how the API and Frontend 
+# services are built, configured, and networked together.
+
+version: '3.8'
+
+services:
+  # The FastAPI Backend Service
+  api:
+    build: .
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      # Mount the local directory to the container for live code reloading during development
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      # Pass the Google API key from the host machine's .env file into the container
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+
+  # The Streamlit Frontend Service
+  frontend:
+    build: .
+    command: streamlit run frontend/app.py --server.port 8501 --server.address 0.0.0.0
+    volumes:
+      - .:/app
+    ports:
+      - "8501:8501"
+    depends_on:
+      # Ensure the API service starts before the frontend attempts to connect to it
+      - api
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
