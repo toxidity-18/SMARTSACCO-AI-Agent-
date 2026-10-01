@@ -83,12 +83,13 @@ def get_member_financial_summary(member_id: str) -> str:
         elif response.status_code == 404:
             return "Error: Member not found. Please verify the member ID."
         else:
-            return f"Error: API returned status code {response.status_code}."
+            # CRITICAL DEBUG: Return the exact URL and the backend's raw error text
+            return f"Error: API returned status code {response.status_code}. URL attempted: {url}. Backend replied: {response.text}"
             
     except requests.exceptions.ConnectionError:
-        return "Error: Could not connect to the backend API. Ensure the FastAPI server is running."
+        return f"Error: Could not connect to the backend API. URL attempted: {url}. Ensure the FastAPI server is running."
     except requests.exceptions.Timeout:
-        return "Error: The backend API took too long to respond. It might be waking up from sleep."
+        return f"Error: The backend API took too long to respond. URL attempted: {url}."
 
 @tool
 def query_sacco_policy(query: str) -> str:
